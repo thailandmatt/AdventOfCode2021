@@ -19,8 +19,60 @@ namespace AdventOfCode2021
 
         public static void Main(string[] args)
         {
-            Day6PartTwo();
+            Day7PartTwo();
         }
+
+        #region Day7
+
+        public static void Day7PartOne()
+        {
+            List<int> crabs = new List<int>(System.IO.File.ReadAllText("Day7.txt").Split(',').Select(one => int.Parse(one)));
+
+            var min = crabs.Min();
+            var max = crabs.Max();
+
+            var answer = -1;
+            var position = -1;
+
+            for (var i = min; i <= max; i++)
+            {
+                var x = crabs.Select(one => Math.Abs(one - i)).Sum();
+                if (x < answer || answer == -1)
+                {
+                    answer = x;
+                    position = i;
+                }
+            }
+
+            Console.WriteLine($"Answer: {answer}, Position: {position}");
+            Console.ReadLine();
+        }
+
+        public static void Day7PartTwo()
+        {
+            List<int> crabs = new List<int>(System.IO.File.ReadAllText("Day7.txt").Split(',').Select(one => int.Parse(one)));
+
+            var min = crabs.Min();
+            var max = crabs.Max();
+
+            var answer = -1;
+            var position = -1;
+
+            for (var i = min; i <= max; i++)
+            {
+                var x = crabs.Select(one => Math.Abs(one - i) * (Math.Abs(one - i) + 1) / 2).Sum();
+                if (x < answer || answer == -1)
+                {
+                    answer = x;
+                    position = i;
+                }
+            }
+
+            Console.WriteLine($"Answer: {answer}, Position: {position}");
+            Console.ReadLine();
+        }
+
+        #endregion
 
         #region Day6
 
