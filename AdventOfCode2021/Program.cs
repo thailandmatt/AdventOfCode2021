@@ -6,21 +6,113 @@ namespace AdventOfCode2021
 {
     public class Program
     {
-        struct Point
-        {
-            public int X;
-            public int Y;
-
-            public override string ToString()
-            {
-                return $"({X}:{Y})";
-            }
-        }
-
+        
         public static void Main(string[] args)
         {
-            Day7PartTwo();
+            Day8PartTwo();
         }
+
+        #region Day8
+
+        //Part one I did in excel
+
+        static bool ContainsAllChars(string parent, string substring)
+        {
+            foreach (char c in substring)
+            {
+                if (!parent.Contains(c))
+                    return false;
+            }
+
+            return true;
+        }
+
+        public static void Day8PartTwo()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day8.txt");
+
+            List<string> translations = new List<string>();
+
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('|');
+                var mappings = parts[0].Trim().Split(' ').ToList();
+
+                string[] answers = new string[10];
+
+                for (int i = 0; i < mappings.Count; i++)
+                    mappings[i] = String.Concat(mappings[i].OrderBy(c => c));
+
+                mappings = mappings.OrderBy(one => one.Length).ToList();
+
+                foreach (string map in mappings)
+                {
+                    if (map.Length == 2)
+                        answers[1] = map;
+                    else if (map.Length == 3)
+                        answers[7] = map;
+                    else if (map.Length == 4)
+                        answers[4] = map;
+                    else if (map.Length == 7)
+                        answers[8] = map;
+                }
+
+                string fourLessOne = answers[4];
+                foreach (char c in answers[1])
+                {
+                    fourLessOne = fourLessOne.Replace(c.ToString(), "");
+                }
+
+                foreach (string map in mappings)
+                {
+                    if (map.Length == 5)
+                    {
+                        if (ContainsAllChars(map, answers[1]))
+                            answers[3] = map;
+                        else if (ContainsAllChars(map, fourLessOne))
+                            answers[5] = map;
+                        else
+                            answers[2] = map;
+                    }
+                    if (map.Length == 6)
+                    {
+                        if (ContainsAllChars(map, answers[4]))
+                            answers[9] = map;
+                        else if (ContainsAllChars(map, fourLessOne))
+                            answers[6] = map;
+                        else
+                            answers[0] = map;
+                    }
+                }
+
+                var question = parts[1].Trim().Split(' ').ToList();
+                for (int i = 0; i < question.Count; i++)
+                    question[i] = String.Concat(question[i].OrderBy(c => c));
+
+                string translation = "";
+                foreach (var q in question)
+                {
+                    for (var i = 0; i < answers.Length; i++)
+                    {
+                        if (answers[i] == q)
+                        {
+                            translation += i.ToString();
+                            break;
+                        }
+                    }
+                }
+
+                if (translation.Length != 4)
+                    throw new System.Exception("Bad Length");
+
+                translations.Add(translation);
+            }
+
+            int answer = translations.Select(one => int.Parse(one)).Sum();
+            Console.WriteLine(answer);
+        }
+
+        #endregion
 
         #region Day7
 
@@ -81,7 +173,7 @@ namespace AdventOfCode2021
             List<int> fish = new List<int>(System.IO.File.ReadAllText("Day6.txt").Split(',').Select(one => int.Parse(one)));
             //List<int> fish = new List<int>("3,4,3,1,2".Split(',').Select(one => int.Parse(one)));
 
-            for (int day = 0; day < 80; day++)            
+            for (int day = 0; day < 80; day++)
             {
                 int newFish = 0;
                 for (int i = 0; i < fish.Count; i++)
@@ -116,7 +208,7 @@ namespace AdventOfCode2021
             for (int day = 0; day < 256; day++)
             {
                 Dictionary<Int64, Int64> newFishCount = new Dictionary<Int64, Int64>();
-                for (int i = 8; i >=0; i--)
+                for (int i = 8; i >= 0; i--)
                 {
                     newFishCount[i - 1] = fishCount.ContainsKey(i) ? fishCount[i] : 0;
                 }
@@ -137,15 +229,26 @@ namespace AdventOfCode2021
         #endregion
 
         #region Day5
+        
+        struct Point
+        {
+            public int X;
+            public int Y;
+
+            public override string ToString()
+            {
+                return $"({X}:{Y})";
+            }
+        }
         public static void Day5PartOne()
-        { 
+        {
             var data = File.ReadAllLines("Day5.txt");
 
             List<(Point, Point)> lines = new List<(Point, Point)>();
 
             foreach (var line in data)
             {
-                var parts = line.Split(new char[] { ',', ' ', '-', '>' }, StringSplitOptions.RemoveEmptyEntries) ;
+                var parts = line.Split(new char[] { ',', ' ', '-', '>' }, StringSplitOptions.RemoveEmptyEntries);
                 lines.Add((new Point() { X = int.Parse(parts[0]), Y = int.Parse(parts[1]) }, new Point() { X = int.Parse(parts[2]), Y = int.Parse(parts[3]) }));
             }
 
@@ -171,7 +274,7 @@ namespace AdventOfCode2021
                         if (!hits.ContainsKey(x)) hits.Add(x, 0);
                         hits[x]++;
                     }
-                } 
+                }
                 else
                 {
                     start = line.Item1.X > line.Item2.X ? line.Item2.X : line.Item1.X;
@@ -219,9 +322,9 @@ namespace AdventOfCode2021
                     if (curPoint.Equals(line.Item2))
                         break;
 
-                    if (line.Item1.Y != line.Item2.Y)                    
+                    if (line.Item1.Y != line.Item2.Y)
                         curPoint.Y = curPoint.Y + (line.Item1.Y < line.Item2.Y ? 1 : -1);
-                    
+
                     if (line.Item1.X != line.Item2.X)
                         curPoint.X = curPoint.X + (line.Item1.X < line.Item2.X ? 1 : -1);
                 }
@@ -483,6 +586,8 @@ namespace AdventOfCode2021
         }
 
         #endregion
+    
+        //Day 2 and 1 I did in excel
     }
 
 }
