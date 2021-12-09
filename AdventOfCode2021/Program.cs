@@ -9,7 +9,75 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day8PartTwo();
+            Day9PartTwo();
+        }
+
+        static void Day9PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day9.txt");
+            List<int> lowSpots = new List<int>();
+
+            for (int row = 0; row < lines.Length; row++)
+            {
+                for (int col = 0; col < lines[row].Length; col++)
+                {
+                    var x = int.Parse(lines[row][col].ToString());
+                    var a = row == 0 ? 10 : int.Parse(lines[row - 1][col].ToString());
+                    var b = row == lines.Length - 1 ? 10 : int.Parse(lines[row + 1][col].ToString());
+                    var c = col == 0 ? 10 : int.Parse(lines[row][col - 1].ToString());
+                    var d = col == lines[row].Length - 1 ? 10 : int.Parse(lines[row][col + 1].ToString());
+
+                    if (x < a && x < b && x < c && x < d)
+                        lowSpots.Add(x);
+                }
+            }
+
+            Console.WriteLine(lowSpots.Count + " " + lowSpots.Sum() + " " + (lowSpots.Count  + lowSpots.Sum()));
+        }
+
+        static void Day9PartTwo()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day9.txt");
+            //this is a variation on the island problem
+            var islandSizes = new List<int>();
+
+            for (int row = 0; row < lines.Length; row++)
+            {
+                for (int col = 0; col < lines[row].Length; col++)
+                {
+                    if (lines[row][col] != '9')
+                    {
+                        islandSizes.Add(ClearIslandSpot(lines, row, col));
+                    }
+                }
+            }
+
+            islandSizes.Sort();
+            islandSizes.Reverse();
+
+            Console.WriteLine(islandSizes[0] + " " + islandSizes[1] + " " + islandSizes[2] + " = " + (islandSizes[0] * islandSizes[1] * islandSizes[2]));
+
+        }
+
+        static int ClearIslandSpot(string[] lines, int row, int col)
+        {            
+            var x = int.Parse(lines[row][col].ToString());
+            if (x == 9) return 0;
+
+            var a = row == 0 ? 10 : int.Parse(lines[row - 1][col].ToString());
+            var b = row == lines.Length - 1 ? 10 : int.Parse(lines[row + 1][col].ToString());
+            var c = col == 0 ? 10 : int.Parse(lines[row][col - 1].ToString());
+            var d = col == lines[row].Length - 1 ? 10 : int.Parse(lines[row][col + 1].ToString());
+
+            int count = 1;
+            lines[row] = lines[row].Substring(0, col) + "9" + lines[row].Substring(col + 1);
+
+            if (a < 9) count += ClearIslandSpot(lines, row - 1, col);
+            if (b < 9) count += ClearIslandSpot(lines, row + 1, col);
+            if (c < 9) count += ClearIslandSpot(lines, row, col - 1);
+            if (d < 9) count += ClearIslandSpot(lines, row, col + 1);
+
+            return count;
         }
 
         #region Day8
