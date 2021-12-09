@@ -12,6 +12,8 @@ namespace AdventOfCode2021
             Day9PartTwo();
         }
 
+        #region Day9
+
         static void Day9PartOne()
         {
             string[] lines = System.IO.File.ReadAllLines("Day9.txt");
@@ -79,6 +81,8 @@ namespace AdventOfCode2021
 
             return count;
         }
+
+        #endregion
 
         #region Day8
 
