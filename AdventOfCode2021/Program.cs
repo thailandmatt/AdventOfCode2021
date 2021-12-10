@@ -9,8 +9,153 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day9PartTwo();
+            Day10PartTwo();
         }
+
+        #region Day10
+
+        public static void Day10PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day10.txt");
+            Stack<char> stack = new Stack<char>();
+            List<char> illegals = new List<char>();
+            foreach (string line in lines)
+            {
+                stack.Clear();
+
+                foreach (char c in line)
+                {
+                    if (c == '(' || c == '[' || c == '{' || c == '<')
+                    {
+                        stack.Push(c);
+                    }
+                    else if (c == ')')
+                    {
+                        char next = stack.Pop();
+                        if (next != '(')
+                        {
+                            illegals.Add(c);
+                            break;
+                        }
+                    }
+                    else if (c == '}')
+                    {
+                        char next = stack.Pop();
+                        if (next != '{')
+                        {
+                            illegals.Add(c);
+                            break;
+                        }
+                    }
+                    else if (c == ']')
+                    {
+                        char next = stack.Pop();
+                        if (next != '[')
+                        {
+                            illegals.Add(c);
+                            break;
+                        }
+                    }
+                    else if (c == '>')
+                    {
+                        char next = stack.Pop();
+                        if (next != '<')
+                        {
+                            illegals.Add(c);
+                            break;
+                        }
+                    }
+                }
+            }
+
+            int score = illegals.Select(one => one == ')' ? 3 : one == ']' ? 57 : one == '}' ? 1197 : one == '>' ? 25137 : 0).Sum();
+            Console.WriteLine("Score: " + score);
+        }
+
+        public static void Day10PartTwo()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day10.txt");
+            Stack<char> stack = new Stack<char>();
+            List<string> finishes = new List<string>();
+            foreach (string line in lines)
+            {
+                bool isIllegal = false;
+                stack.Clear();
+
+                foreach (char c in line)
+                {
+                    if (c == '(' || c == '[' || c == '{' || c == '<')
+                    {
+                        stack.Push(c);
+                    }
+                    else if (c == ')')
+                    {
+                        char next = stack.Pop();
+                        if (next != '(')
+                        {
+                            isIllegal = true;
+                            break;
+                        }
+                    }
+                    else if (c == '}')
+                    {
+                        char next = stack.Pop();
+                        if (next != '{')
+                        {
+                            isIllegal = true;
+                            break;
+                        }
+                    }
+                    else if (c == ']')
+                    {
+                        char next = stack.Pop();
+                        if (next != '[')
+                        {
+                            isIllegal = true;
+                            break;
+                        }
+                    }
+                    else if (c == '>')
+                    {
+                        char next = stack.Pop();
+                        if (next != '<')
+                        {
+                            isIllegal = true;
+                            break;
+                        }
+                    }
+                }
+
+                if (!isIllegal)
+                {
+                    //incomplete
+                    string finish = "";
+                    while (stack.Count > 0)
+                    {
+                        var x = stack.Pop();
+                        finish += (x == '<' ? '>' : x == '[' ? ']' : x == '{' ? '}' : x == '(' ? ')' : ' ').ToString();
+                    }
+                    finishes.Add(finish);
+                }
+            }
+
+            List<Int64> scores = new List<Int64>();
+            foreach (string finish in finishes)
+            {
+                Int64 score = 0;
+                foreach (char c in finish)
+                {
+                    score *= 5;
+                    score += (c == ')' ? 1 : c == ']' ? 2 : c == '}' ? 3 : c == '>' ? 4 : 0);
+                }
+                scores.Add(score);
+            }
+
+            scores.Sort();
+            Console.WriteLine(scores[scores.Count / 2]);
+        }
+
+        #endregion
 
         #region Day9
 
