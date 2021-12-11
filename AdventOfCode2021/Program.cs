@@ -9,8 +9,98 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day10PartTwo();
+            Day11PartOne();
         }
+
+        #region Day11
+
+        public class Grid: List<List<int>>
+        {
+            public override string ToString()
+            {
+                string s = "";
+                foreach (var x in this)
+                {
+                    s += String.Concat(x) + "\n";
+                }
+                return s.Trim();
+            }
+        }
+
+        public static void Day11PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day11.txt");
+            Grid grid = new Grid();
+            foreach (string line in lines)
+            {
+                List<int> t = new List<int>(line.ToCharArray().Select(one => int.Parse(one.ToString())));
+                grid.Add(t);
+            }
+
+            int flashes = 0;
+
+            for (int i = 0; i < 1000; i++)
+            {
+                //increment by 1
+                foreach (List<int> line in grid)
+                {
+                    for (int x = 0; x < line.Count; x++)
+                    {
+                        line[x]++;
+                    }
+                }
+
+                while (true)
+                {
+                    bool didFlash = false;
+
+                    for (int y = 0; y < grid.Count; y++)
+                    {
+                        var line = grid[y];
+                        for (int x = 0; x < line.Count; x++)
+                        {
+                            if (line[x] > 9 && line[x] < 100)
+                            {
+                                //flash
+                                flashes++;
+                                didFlash = true;
+                                if (x > 0 && y > 0) grid[y - 1][x - 1]++;
+                                if (y > 0) grid[y - 1][x]++;
+                                if (x < line.Count - 1&& y > 0) grid[y - 1][x + 1]++;
+                                if (x > 0) line[x - 1]++;
+                                if (x < line.Count - 1) line[x + 1]++;
+                                if (x > 0 && y < grid.Count - 1) grid[y + 1][x - 1]++;
+                                if (y < grid.Count - 1) grid[y + 1][x]++;
+                                if (x < line.Count - 1 && y < grid.Count - 1) grid[y + 1][x + 1]++;
+                                line[x] = 100;
+                            }
+                        }
+                    }
+
+                    if (!didFlash) break;
+                }
+
+                foreach (List<int> line in grid)
+                {
+                    for (int x = 0; x < line.Count; x++)
+                    {
+                        if (line[x] >= 100) line[x] = 0;
+                    }
+                }
+
+                //part 2
+                bool AllZero = !grid.Any(one => one.Any(two => two != 0));
+                if (AllZero)
+                {
+                    Console.WriteLine("Part 2: " + (i + 1).ToString());
+                    return;
+                }
+            }
+                        
+            Console.WriteLine("Part 1: " + flashes);
+        }
+
+        #endregion
 
         #region Day10
 
