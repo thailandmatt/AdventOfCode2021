@@ -9,8 +9,151 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day11PartOne();
+            Day13PartOne();
         }
+
+        #region Day13
+
+        public static void Day13PartOne()
+        {
+            //parse input
+            string[] lines = System.IO.File.ReadAllLines("Day13.txt");
+            List<Point> points = new List<Point>();
+            List<Point> folds = new List<Point>();
+
+            foreach (string line in lines)
+            {
+                if (line != "" && !line.StartsWith("fold along"))
+                {
+                    var segments = line.Split(',');
+                    points.Add(new Point() { X = int.Parse(segments[0]), Y = int.Parse(segments[1]) });
+                }
+                else if (line.StartsWith("fold along x="))
+                {
+                    folds.Add(new Point() { X = int.Parse(line.Replace("fold along x=", "")), Y = 0 });
+                }
+                else if (line.StartsWith("fold along y="))
+                {
+                    folds.Add(new Point() { Y = int.Parse(line.Replace("fold along y=", "")), X = 0 });
+                }
+            }
+
+            points = points.OrderBy(one => one.Y).ThenBy(one => one.X).ToList();
+
+            foreach (var fold in folds)
+            {
+                for (int i = 0; i < points.Count; i++)
+                {
+                    var p = points[i];
+                    if (p.X > fold.X && fold.X > 0) p.X = p.X - ((p.X - fold.X) * 2);
+                    if (p.Y > fold.Y && fold.Y > 0) p.Y = p.Y - ((p.Y - fold.Y) * 2);
+                    points[i] = p;
+                }
+
+                //part 1
+                //break;
+            }
+
+            //part 1
+            //points = points.GroupBy(one => one.ToString()).Select(one => one.First()).ToList();
+            //Console.WriteLine("Number of points = " + points.Count());
+
+            //print it out for part 2
+
+            for (var y = 0; y <= points.Max(one => one.Y); y++)
+            {
+                for (var x = 0; x <= points.Max(one => one.X); x++)
+                {
+                    var test = points.Find(one => one.X == x && one.Y == y);
+                    if (test != null)
+                        Console.Write("X");
+                    else
+                        Console.Write(" ");
+                }
+                Console.Write("\n");
+            }
+        }
+
+        #endregion
+
+        #region Day12
+
+        public static void Day12PartOne()
+        {
+            Dictionary<string, List<string>> map = new Dictionary<string, List<string>>();
+
+            //parse input
+            string[] lines = System.IO.File.ReadAllLines("Day12.txt");
+            foreach (string line in lines)
+            {
+                string[] parts = line.Split('-');
+                if (!map.ContainsKey(parts[0]))
+                    map.Add(parts[0], new List<string>());
+                if (!map.ContainsKey(parts[1]))
+                    map.Add(parts[1], new List<string>());
+
+                if (!map[parts[0]].Contains(parts[1]))
+                    map[parts[0]].Add(parts[1]);
+
+
+                if (!map[parts[1]].Contains(parts[0]))
+                    map[parts[1]].Add(parts[0]);
+            }
+
+            //DFS from start - only mark "small" caves (lowercase) as visited
+            //and pray there isn't a loop of large caves or else it will go on forever
+            List<List<string>> paths = DFSFromNode("start", map, new List<string>());
+            List<string> codedPaths = new List<string>();
+            foreach (var path in paths)
+            {
+                codedPaths.Add(String.Join("-", path));
+            }
+
+            codedPaths = codedPaths.Distinct().ToList();
+
+            Console.WriteLine("Paths = " + codedPaths.Count);
+        }
+
+        public static List<List<string>> DFSFromNode(string nodeName, Dictionary<string, List<string>> map, List<string> pathSoFar)
+        {
+            List<List<string>> paths = new List<List<string>>();
+
+            pathSoFar.Add(nodeName);
+            bool hasDoubleSmallCave = false;
+            if (pathSoFar.Where(one => char.IsLower(one[0])).GroupBy(one => one).Where(one => one.Count() > 1).Count() > 0)
+                hasDoubleSmallCave = true;
+
+            var nodeEndpoints = map[nodeName];
+            foreach (var other in nodeEndpoints)
+            {
+                if (other == "start")
+                    continue;
+                else if (other == "end")
+                {
+                    pathSoFar.Add("end");
+                    paths.Add(new List<string>(pathSoFar));
+                    pathSoFar.RemoveAt(pathSoFar.Count - 1);
+                }
+                else if (!pathSoFar.Contains(other))
+                {
+                    paths.AddRange(DFSFromNode(other, map, pathSoFar));
+                }
+                else
+                {
+                    if (char.IsUpper(other[0]))
+                        paths.AddRange(DFSFromNode(other, map, pathSoFar));
+
+                    //part 2
+                    if (pathSoFar.Count(one => one == other) == 1 && !hasDoubleSmallCave)
+                        paths.AddRange(DFSFromNode(other, map, pathSoFar));
+                }
+            }
+
+            pathSoFar.RemoveAt(pathSoFar.Count - 1);
+            return paths;
+        }
+
+        #endregion
 
         #region Day11
 
@@ -537,7 +680,7 @@ namespace AdventOfCode2021
 
         #region Day5
         
-        struct Point
+        class Point
         {
             public int X;
             public int Y;
