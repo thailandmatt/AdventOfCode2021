@@ -9,8 +9,120 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day13PartOne();
+            Day14PartTwo();
         }
+
+        #region Day14
+
+        public static void Day14PartOne()
+        {
+            //parse
+            var lines = System.IO.File.ReadAllLines("Day14.txt").ToList();
+            string start = lines[0];
+
+            lines.RemoveAt(0);
+            lines.RemoveAt(0);
+
+            Dictionary<string, string> rules = new Dictionary<string, string>();
+            foreach (string line in lines)
+            {
+                rules.Add(line.Substring(0, 2), line.Substring(6, 1));
+            }
+
+            List<char> polymer = new List<char>(start.ToArray());
+
+            for (int i = 0; i < 10; i++)
+            {
+                List<char> next = new List<char>();
+                for (int j = 0; j < polymer.Count - 1; j++)
+                {
+                    next.Add(polymer[j]);
+                    var key = polymer[j].ToString() + polymer[j + 1].ToString();
+                    if (rules.ContainsKey(key))
+                    {
+                        next.Add(rules[key][0]);
+                    }
+                }
+                next.Add(polymer[polymer.Count - 1]);
+                string x = String.Concat(next);
+                polymer = next;
+            }
+
+            //group by
+            var groups = polymer.GroupBy(one => one).OrderByDescending(one => one.Count()).ToList();
+            Console.WriteLine("Most common = " + groups[0].Key + " count " + groups[0].Count());
+            Console.WriteLine("Least common = " + groups[groups.Count - 1].Key + " count " + groups[groups.Count - 1].Count());
+            Console.WriteLine("Answer = " + (groups[0].Count() - groups[groups.Count - 1].Count()));
+        }
+
+        public static void Day14PartTwo()
+        {
+            //parse
+            var lines = System.IO.File.ReadAllLines("Day14.txt").ToList();
+            string start = lines[0];
+
+            lines.RemoveAt(0);
+            lines.RemoveAt(0);
+
+            Dictionary<string, string> rules = new Dictionary<string, string>();
+            foreach (string line in lines)
+            {
+                rules.Add(line.Substring(0, 2), line.Substring(6, 1));
+            }
+
+            //a different way to think about this
+            //we can count how many of each two letter combo we have
+            //and then just add counts to a dictionary instead
+            Dictionary<string, Int64> keyValuePairs = new Dictionary<string, Int64>();
+
+            for (int i = 0; i < start.Length - 1; i++)
+            {
+                if (!keyValuePairs.ContainsKey(start.Substring(i, 2)))
+                    keyValuePairs.Add(start.Substring(i, 2), 0);
+
+                keyValuePairs[start.Substring(i, 2)]++;
+            }
+
+            for (int i = 0; i < 40; i++)
+            {
+                Dictionary<string, Int64> newKV = new Dictionary<string, long>();
+                foreach (var key in keyValuePairs.Keys)
+                {
+                    if (rules.ContainsKey(key))
+                    {
+                        var k1 = key[0] + rules[key];
+                        var k2 = rules[key] + key[1];
+
+                        if (!newKV.ContainsKey(k1))
+                            newKV.Add(k1, 0);
+
+                        if (!newKV.ContainsKey(k2))
+                            newKV.Add(k2, 0);
+
+                        newKV[k1] += keyValuePairs[key];
+                        newKV[k2] += keyValuePairs[key];
+                    }
+                }
+                keyValuePairs = newKV;
+            }
+
+            //add up
+            Dictionary<char, Int64> letters = new Dictionary<char, Int64>();
+            foreach (string key in keyValuePairs.Keys)
+            {
+                if (!letters.ContainsKey(key[0])) letters.Add(key[0], 0);
+                letters[key[0]] += keyValuePairs[key];
+            }
+            letters[start[start.Length - 1]]++;
+            var max = letters.MaxBy(one => one.Value);
+            var min = letters.MinBy(one => one.Value);
+
+            Console.WriteLine("Most common = " + max.Key + " count " + max.Value);
+            Console.WriteLine("Least common = " + min.Key + " count " + min.Value);
+            Console.WriteLine("Answer = " + (max.Value - min.Value));
+        }
+
+        #endregion
 
         #region Day13
 
