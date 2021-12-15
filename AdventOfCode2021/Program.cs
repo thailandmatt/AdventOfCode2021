@@ -12,6 +12,8 @@ namespace AdventOfCode2021
             Day15PartTwo();
         }
 
+        #region Day15
+
         public static void Day15PartOne()
         {
             var lines = System.IO.File.ReadAllLines(@"Day15.txt");
@@ -232,7 +234,7 @@ namespace AdventOfCode2021
             Console.WriteLine("Total Cost = " + distance[rows - 1, cols - 1]);
         }
 
-
+        #endregion
 
         #region Day14
 
