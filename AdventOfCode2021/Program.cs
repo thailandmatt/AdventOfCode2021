@@ -9,8 +9,230 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day14PartTwo();
+            Day15PartTwo();
         }
+
+        public static void Day15PartOne()
+        {
+            var lines = System.IO.File.ReadAllLines(@"Day15.txt");
+            var grid = lines.Select(one => one.Select(two => int.Parse(two.ToString())).ToArray()).ToArray();
+            var cols = grid[0].Length;
+            var rows = grid.Length;
+            var newgrid = new int[rows, cols];
+
+            for (var row = 0; row < rows; row++)
+            {
+                for (var col = 0; col < cols; col++)
+                {
+                    newgrid[row, col] = grid[row][col];
+                }
+            }
+
+            Day15DijjkstrasPartOne(newgrid);
+        }
+
+        public static void Day15DijjkstrasPartOne(int[,] grid)
+        {
+            //do dijkstras shortest path
+            var cols = grid.GetUpperBound(1) + 1;
+            var rows = grid.GetUpperBound(0) + 1;
+
+            //i'm not going to do a full priority queue and hope its fast enough
+            var distance = new int[rows, cols];
+            var parent = new (int, int)[rows, cols];
+            var remainingNodes = new List<(int, int)>();
+
+            //initialize distance
+            for (var row = 0; row < rows; row++)
+            {
+                for (var col = 0; col < cols; col++)
+                {
+                    distance[row, col] = int.MaxValue;
+                    remainingNodes.Add((row, col));
+                }
+            }
+
+            distance[0, 0] = 0;
+
+            //do dijkstras
+            while (remainingNodes.Count > 0)
+            {
+                //find the smallest one in queue
+                (int, int) minNode = (-1, -1);
+                var min = int.MaxValue;
+
+                foreach (var x in remainingNodes)
+                {
+                    if (distance[x.Item1, x.Item2] < min)
+                    {
+                        min = distance[x.Item1, x.Item2];
+                        minNode = x;
+                    }
+                }
+
+                remainingNodes.Remove(minNode);
+
+                //ok now go add update distance for all the neighbors
+                if (minNode.Item1 > 0)
+                {
+                    //can go up
+                    if (distance[minNode.Item1 - 1, minNode.Item2] > grid[minNode.Item1 - 1, minNode.Item2] + min)
+                    {
+                        distance[minNode.Item1 - 1, minNode.Item2] = grid[minNode.Item1 - 1, minNode.Item2] + min;
+                        parent[minNode.Item1 - 1, minNode.Item2] = minNode;
+                    }
+                }
+
+                if (minNode.Item2 > 0)
+                {
+                    //can go left
+                    if (distance[minNode.Item1, minNode.Item2 - 1] > grid[minNode.Item1, minNode.Item2 - 1] + min)
+                    {
+                        distance[minNode.Item1, minNode.Item2 - 1] = grid[minNode.Item1, minNode.Item2 - 1] + min;
+                        parent[minNode.Item1, minNode.Item2 - 1] = minNode;
+                    }
+                }
+
+                if (minNode.Item1 < rows - 1)
+                {
+                    //can go down
+                    if (distance[minNode.Item1 + 1, minNode.Item2] > grid[minNode.Item1 + 1, minNode.Item2] + min)
+                    {
+                        distance[minNode.Item1 + 1, minNode.Item2] = grid[minNode.Item1 + 1, minNode.Item2] + min;
+                        parent[minNode.Item1 + 1, minNode.Item2] = minNode;
+                    }
+                }
+
+                if (minNode.Item2 < cols - 1)
+                {
+                    //can go right
+                    if (distance[minNode.Item1, minNode.Item2 + 1] > grid[minNode.Item1, minNode.Item2 + 1] + min)
+                    {
+                        distance[minNode.Item1, minNode.Item2 + 1] = grid[minNode.Item1, minNode.Item2 + 1] + min;
+                        parent[minNode.Item1, minNode.Item2 + 1] = minNode;
+                    }
+                }
+            }
+
+            //now trace shortest path from the bottom left corner
+            Console.WriteLine("Total Cost = " + distance[rows - 1, cols - 1]);
+        }
+
+        public static void Day15PartTwo()
+        {
+            var lines = System.IO.File.ReadAllLines(@"Day15.txt");
+            var grid = lines.Select(one => one.Select(two => int.Parse(two.ToString())).ToArray()).ToArray();
+            var cols = grid[0].Length;
+            var rows = grid.Length;
+
+            var newGrid = new int[rows * 5, cols * 5];
+
+            //Console.Write("\n");
+            for (var row = 0; row < rows * 5; row++)
+            {
+                for (var col = 0; col < cols * 5; col++)
+                {
+                    var rowDiv = row / rows;
+                    var rowMod = row % rows;
+                    var colDiv = col / cols;
+                    var colMod = col % cols;
+
+                    var newVal = grid[rowMod][colMod] + rowDiv + colDiv;
+                    if (newVal > 9) newVal = newVal - 9;
+                    newGrid[row, col] =  newVal;
+                    //Console.Write(newVal);
+                }
+                //Console.Write("\n");
+            }
+
+            //duplicate this 5 times in each direction
+            Day15DijjkstrasPartTwo(newGrid);
+        }
+
+        public static void Day15DijjkstrasPartTwo(int[,] grid)
+        {
+            //do dijkstras shortest path
+            var cols = grid.GetUpperBound(1) + 1;
+            var rows = grid.GetUpperBound(0) + 1;
+            
+            //have to do a queue - but don't have to update priority because of the nature of the problem
+            var distance = new int[rows, cols];
+            var parent = new (int, int)[rows, cols];
+            var queue = new PriorityQueue<(int, int), int>();
+
+            //initialize distance
+            //initialize distance
+            for (var row = 0; row < rows; row++)
+            {
+                for (var col = 0; col < cols; col++)
+                {
+                    distance[row, col] = int.MaxValue;             
+                }
+            }
+            distance[0, 0] = 0;
+
+            queue.Enqueue((0, 0), 0);
+
+            //do dijkstras
+            while (queue.Count > 0)
+            {
+                //find the smallest one in queue
+                var minNode = queue.Dequeue();
+                var min = distance[minNode.Item1, minNode.Item2];
+
+                //ok now go add update distance for all the neighbors
+                if (minNode.Item1 > 0)
+                {
+                    
+                    //can go up
+                    if (distance[minNode.Item1 - 1, minNode.Item2] > grid[minNode.Item1 - 1, minNode.Item2] + min)
+                    {
+                        distance[minNode.Item1 - 1, minNode.Item2] = grid[minNode.Item1 - 1, minNode.Item2] + min;
+                        parent[minNode.Item1 - 1, minNode.Item2] = minNode;
+                        queue.Enqueue((minNode.Item1 - 1, minNode.Item2), distance[minNode.Item1 - 1, minNode.Item2]);
+                    }
+                    
+                }
+
+                if (minNode.Item2 > 0)
+                {
+                    //can go left
+                    if (distance[minNode.Item1, minNode.Item2 - 1] > grid[minNode.Item1, minNode.Item2 - 1] + min)
+                    {
+                        distance[minNode.Item1, minNode.Item2 - 1] = grid[minNode.Item1, minNode.Item2 - 1] + min;
+                        parent[minNode.Item1, minNode.Item2 - 1] = minNode;
+                        queue.Enqueue((minNode.Item1, minNode.Item2 - 1), distance[minNode.Item1, minNode.Item2 - 1]);
+                    }
+                }
+
+                if (minNode.Item1 < rows - 1)
+                {
+                    //can go down
+                    if (distance[minNode.Item1 + 1, minNode.Item2] > grid[minNode.Item1 + 1, minNode.Item2] + min)
+                    {
+                        distance[minNode.Item1 + 1, minNode.Item2] = grid[minNode.Item1 + 1, minNode.Item2] + min;
+                        parent[minNode.Item1 + 1, minNode.Item2] = minNode;
+                        queue.Enqueue((minNode.Item1 + 1, minNode.Item2), distance[minNode.Item1 + 1, minNode.Item2]);
+                    }
+                }
+
+                if (minNode.Item2 < cols - 1)
+                {
+                    //can go right
+                    if (distance[minNode.Item1, minNode.Item2 + 1] > grid[minNode.Item1, minNode.Item2 + 1] + min)
+                    {
+                        distance[minNode.Item1, minNode.Item2 + 1] = grid[minNode.Item1, minNode.Item2 + 1] + min;
+                        parent[minNode.Item1, minNode.Item2 + 1] = minNode;
+                        queue.Enqueue((minNode.Item1, minNode.Item2 + 1), distance[minNode.Item1, minNode.Item2 + 1]);
+                    }
+                }
+            }
+
+            //now trace shortest path from the bottom left corner
+            Console.WriteLine("Total Cost = " + distance[rows - 1, cols - 1]);
+        }
+
+
 
         #region Day14
 
