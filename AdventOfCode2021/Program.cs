@@ -9,7 +9,7 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day16PartOne();
+            Day16PartTwo();
         }
 
         #region Day16
@@ -80,6 +80,117 @@ namespace AdventOfCode2021
             }
 
             Console.WriteLine("Version sum: " + versionSum);
+        }
+
+        class Day16Packet
+        {
+            public int Version { get; set; }
+            public int PacketType { get; set; }
+            public Int64 Literal { get; set; }
+            public int LengthType { get; set; }
+            public int SubPacketsSizeInBits { get; set; }
+            public int SubPacketCount { get; set; }
+            public List<Day16Packet> Packets { get; set; }
+
+            public Day16Packet()
+            {
+                this.Packets = new List<Day16Packet>();
+            }
+
+            public string ParseNextPacket(string binaryString)
+            {
+                var position = 0;
+                
+                this.Version = Convert.ToInt32(binaryString.Substring(position, 3), 2);
+                position += 3;                
+
+                this.PacketType = Convert.ToInt32(binaryString.Substring(position, 3), 2);
+                position += 3;  
+
+                if (this.PacketType == 4)
+                {                    
+                    //literal - groups of 5 until first bit is a 0
+                    string literalNumber = "";
+                    while (true)
+                    {
+                        literalNumber += binaryString.Substring(position + 1, 4);
+                        position += 5;
+                        if (binaryString[position - 5] == '0')
+                        {
+                            this.Literal = Convert.ToInt64(literalNumber, 2);
+                            break;
+                        }
+                    }
+
+                    return binaryString.Substring(position);
+                }
+                else
+                {
+                    LengthType = binaryString[position];
+                    position++;
+
+                    if (LengthType == '0')
+                    {
+                        SubPacketsSizeInBits = Convert.ToInt32(binaryString.Substring(position, 15), 2);
+                        position += 15;
+
+                        string subString = binaryString.Substring(position, SubPacketsSizeInBits);
+                        position += SubPacketsSizeInBits;
+
+                        while (subString != "" && subString.Contains('1'))
+                        {
+                            var SubPacket = new Day16Packet();
+                            subString = SubPacket.ParseNextPacket(subString);
+                            this.Packets.Add(SubPacket);
+                        }
+
+                        return binaryString.Substring(position);
+                    }
+                    else if (LengthType == '1')
+                    {
+                        SubPacketCount = Convert.ToInt32(binaryString.Substring(position, 11), 2);
+                        position += 11;
+
+                        var subString = binaryString.Substring(position);
+
+                        for (var i = 0; i < SubPacketCount; i++)
+                        {
+                            var SubPacket = new Day16Packet();
+                            subString = SubPacket.ParseNextPacket(subString);
+                            this.Packets.Add(SubPacket);
+                        }
+
+                        return subString;
+                    }
+                }
+
+                return binaryString.Substring(position);
+            }
+
+            public Int64 ReturnValue()
+            {
+                if (PacketType == 0) return Packets.Sum(one => one.ReturnValue());
+                if (PacketType == 1) return Packets.Aggregate((Int64)1, (a, b) => a * b.ReturnValue());
+                if (PacketType == 2) return Packets.Min(one => one.ReturnValue());
+                if (PacketType == 3) return Packets.Max(one => one.ReturnValue());                
+                if (PacketType == 4) return Literal;
+                if (PacketType == 5) return Packets[0].ReturnValue() > Packets[1].ReturnValue() ? 1 : 0;
+                if (PacketType == 6) return Packets[0].ReturnValue() < Packets[1].ReturnValue() ? 1 : 0;
+                if (PacketType == 7) return Packets[0].ReturnValue() == Packets[1].ReturnValue() ? 1 : 0;
+                return 0;
+            }
+        }
+        
+        public static void Day16PartTwo()
+        {
+            string theCode = System.IO.File.ReadAllText("Day16.txt");
+            string binaryString = String.Join(String.Empty, theCode.Select(c => Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0')));
+
+            var root = new Day16Packet();
+            var remaining = root.ParseNextPacket(binaryString);
+
+            Console.WriteLine("Reamaining = " + remaining);
+            Console.WriteLine("Root ReturnValue = " + root.ReturnValue());
         }
 
         #endregion
