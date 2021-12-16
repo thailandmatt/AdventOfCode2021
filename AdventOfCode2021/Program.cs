@@ -9,8 +9,80 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day15PartTwo();
+            Day16PartOne();
         }
+
+        #region Day16
+
+        public static void Day16PartOne()
+        {
+            string theCode = System.IO.File.ReadAllText("Day16.txt");
+            string binarystring = String.Join(String.Empty, theCode.Select(c => Convert.ToString(Convert.ToInt32(c.ToString(), 16), 2).PadLeft(4, '0')));
+
+            int position = 0;
+            int versionSum = 0;
+            
+            while (position < binarystring.Length)
+            {
+                var packetStartPosition = position;
+                var packetVersion = Convert.ToInt32(binarystring.Substring(position, 3), 2);
+                position += 3;
+                versionSum += packetVersion;
+            
+                Console.Write("Version: " + packetVersion);
+                var packetType = Convert.ToInt32(binarystring.Substring(position, 3), 2);
+                position += 3;
+                Console.Write(", Type: " + packetType);
+                if (packetType == 4)
+                {                    
+                    Console.Write(" = Literal");
+                    //literal - groups of 5 until first bit is a 0
+                    string literalNumber = "";
+                    while (true)
+                    {
+                        literalNumber += binarystring.Substring(position + 1, 4);
+                        position += 5;
+                        if (binarystring[position - 5] == '0')
+                        {
+                            Console.Write(" Number = " + Convert.ToInt64(literalNumber, 2));
+                            break;
+                        }
+                    }
+
+                    Console.Write(" Packet Size = " + (position - packetStartPosition) + " bits");                    
+                }
+                else
+                {
+                    Console.Write(" = Other");
+                    var lengthType = binarystring[position];
+                    position++;
+                    Console.Write(", Length Type " + lengthType);
+
+                    if (lengthType == '0')
+                    {
+                        var subPacketLength = Convert.ToInt32(binarystring.Substring(position, 15), 2);
+                        position += 15;
+                        Console.Write(", Sub Packet Length is " + subPacketLength + " bits");
+                    }
+                    else if (lengthType == '1')
+                    {
+                        var subPacketCount = Convert.ToInt32(binarystring.Substring(position, 11), 2);                        
+                        position += 11;
+                        Console.Write(", Sub Packet Count is " + subPacketCount);
+                    }
+                }
+
+                Console.Write("\n");
+
+                //break if only padded zeros remaining
+                if (!binarystring.Substring(position).Contains('1'))
+                    break;
+            }
+
+            Console.WriteLine("Version sum: " + versionSum);
+        }
+
+        #endregion
 
         #region Day15
 
