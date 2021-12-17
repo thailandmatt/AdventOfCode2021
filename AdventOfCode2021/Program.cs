@@ -9,8 +9,127 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day16PartTwo();
+            Day17PartOne();
+            Day17PartTwo();
         }
+
+        #region Day17
+
+        public static void Day17PartOne()
+        {
+            //target area: x=195..238, y=-93..-67
+            int minx = 195;
+            int maxx = 238;
+            int miny = -93;
+            int maxy = -67;
+
+            //brute force?
+            int ySpeed = 0;
+
+            for (int x = 0; x < maxx; x++)
+            {
+                for (int y = 0; y < 1000; y++)
+                {
+                    if (Day17Simulation(x, y, minx, maxx, miny, maxy))
+                    {
+                        if (y > ySpeed)
+                        {
+                            ySpeed = y;
+                        }
+                    }
+                }
+            }
+
+            int maxYPosition = 0;
+            int curySpeed = ySpeed;
+            for (int i = 0; i < 1000; i++)
+            {
+                maxYPosition += curySpeed;
+                curySpeed--;
+                if (curySpeed <= 0) break;
+            }
+
+            Console.WriteLine("Max of " + maxYPosition + " at y speed " + ySpeed);
+
+            //in the end this was just math
+            //think of it this way - we're going to go up to our max height and then down in such
+            //a way that we will be going (0-initial y velocity) when we hit 0 again.
+            //since our target y area is negative, that means we can't be going faster than -93
+            //when we hit y=0 again or else we'll overshoot
+            //so if you take an initial velocity of 92
+            //(if you start at 93, then the step after you hit 0 will be -94 so you overshoot)
+            //the max will be 92+91....+1 which is n*(n+1)/2
+            //93 * 92 / 2 = 4278 which is the right answer
+        }
+
+        public static void Day17PartTwo()
+        {
+            //target area: x=195..238, y=-93..-67
+            int minx = 195;
+            int maxx = 238;
+            int miny = -93;
+            int maxy = -67;
+
+            int lowerboundx = int.MaxValue;
+            int upperboundx = int.MinValue;
+            int lowerboundy = int.MaxValue;
+            int upperboundy = int.MinValue;
+            
+            //brute force?
+            var goodCount = 0;
+            for (int x = 0; x <= maxx; x++)
+            {
+                for (int y = -2000; y <= 2000; y++)
+                {
+                    if (Day17Simulation(x, y, minx, maxx, miny, maxy))
+                    {
+                        if (x < lowerboundx) lowerboundx = x;
+                        if (y < lowerboundy) lowerboundy = y;
+                        if (x > upperboundx) upperboundx = x;
+                        if (y > upperboundy) upperboundy = y;
+                        goodCount++;
+                    }
+                }
+            }
+
+            Console.WriteLine("Good count: " + goodCount);
+            Console.WriteLine("Bounds: " + lowerboundx + " to " + upperboundx + ", " + lowerboundy + " to " + upperboundy);
+
+            //after looking at the empirical bounds, they make sense (at least for a positive X and negative Y target range)
+
+            //the x has to be at least something that x + (x-1) + (x-2)...0 gets you to the minx
+            //so (n * (n + 1)) / 2 = minx is the lower bound
+            //that becomes n^2 + n - 2*minx, which solves to [-1 + sqrt(1 + 8x)]/2
+            //so my minx of 195 would be (sqrt(1561)-1)/2 which is 19.25 (and 20 is the empirical lower bound
+
+            //the upper bound is maxx - anything beyond that you overshoot on the first shot and can't get back
+
+            //the y is similar - lowerbound is maxy - you overshoot on the first shot and won't get back
+
+            //the upperbound of y is essentially 0 - maxy - 1 because of the discussion in part 1
+        }
+
+        public static bool Day17Simulation(int xspeed, int yspeed, int minx, int maxx, int miny, int maxy)
+        {
+            //try 10000 steps - bail when we're past maxx or under miny
+            int curx = 0;
+            int cury = 0;
+            for (int i = 0; i < 10000; i++)
+            {
+                curx += xspeed;
+                cury += yspeed;
+
+                if (curx >= minx && curx <= maxx && cury >= miny && cury <= maxy) return true;
+                if (curx > maxx || cury < miny) break;
+
+                xspeed = xspeed > 0 ? xspeed - 1 : xspeed == 0 ? 0 : xspeed < 0 ? xspeed + 1 : 0;
+                yspeed--;
+            }
+
+            return false;
+        }
+
+        #endregion
 
         #region Day16
 
