@@ -9,9 +9,268 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day17PartOne();
-            Day17PartTwo();
+            Day18PartTwo();
         }
+
+        #region Day18
+
+        public static void Day18PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day18.txt");
+
+            var linesAsPairs = Parse(lines);
+
+            //Part 1
+            var cur = linesAsPairs[0];
+            for (int i = 1; i < linesAsPairs.Count; i++)
+            {
+                var next = new Day18Pair() { LeftPair = cur, RightPair = linesAsPairs[i] };
+                cur.ParentPair = next;
+                linesAsPairs[i].ParentPair = next;
+                next.Reduce();
+                cur = next;
+            }
+
+            Console.WriteLine("Part 1");
+            Console.WriteLine(cur.ToString());
+            Console.WriteLine("Magnitude: " + cur.Magnitude());
+        }
+
+        public static void Day18PartTwo()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day18.txt");
+
+            var linesAsPairs = Parse(lines);
+            //Part 2
+            int largestMagnitude = 0;
+
+            //try every combo in both directions
+            for (var i = 0; i < linesAsPairs.Count; i++)
+            {
+                for (var j = i + 1; j < linesAsPairs.Count; j++)
+                {
+                    //clone
+                    var x = Parse(linesAsPairs[i].ToString());
+                    var y = Parse(linesAsPairs[j].ToString());
+
+                    var next = new Day18Pair() { LeftPair = x, RightPair = y };
+                    y.ParentPair = next;
+                    x.ParentPair = next;
+                    next.Reduce();
+                    
+                    if (next.Magnitude() > largestMagnitude)
+                        largestMagnitude = next.Magnitude();
+
+                    //reset
+                    x = Parse(linesAsPairs[i].ToString());
+                    y = Parse(linesAsPairs[j].ToString());
+
+                    next = new Day18Pair() { LeftPair = y, RightPair = x };
+                    x.ParentPair = next;
+                    y.ParentPair = next;
+                    next.Reduce();
+
+                    if (next.Magnitude() > largestMagnitude)
+                        largestMagnitude = next.Magnitude();
+                }
+            }
+
+            Console.WriteLine("Largest magnitude = " + largestMagnitude);
+        }
+
+        public static List<Day18Pair> Parse(string[] lines)
+        {
+            List<Day18Pair> linesAsPairs = new List<Day18Pair>();
+
+            //parse heirarchy
+            foreach (var line in lines)
+            {
+                var root = Parse(line);
+
+                linesAsPairs.Add(root);
+            }
+            return linesAsPairs;
+        }
+
+        public static Day18Pair Parse(string line)
+        {
+            Day18Pair root = null;
+            Day18Pair curPair = null;
+
+            for (var i = 0; i < line.Length; i++)
+            {
+                if (line[i] == '[')
+                {
+                    if (root == null)
+                    {
+                        root = new Day18Pair();
+                        curPair = root;
+                    }
+                    else
+                    {
+                        var newPair = new Day18Pair();
+                        newPair.ParentPair = curPair;
+
+                        if (curPair.LeftPair == null)
+                            curPair.LeftPair = newPair;
+                        else
+                            curPair.RightPair = newPair;
+
+                        curPair = newPair;
+
+                    }
+                }
+                else if (line[i] == ']')
+                {
+                    curPair = curPair.ParentPair;
+                }
+                else if (line[i] == ',')
+                {
+
+                }
+                else
+                {
+                    var nextComma = line.IndexOf(',', i);
+                    var nextCloseBracket = line.IndexOf(']', i);
+                    var nextEnding = nextComma < nextCloseBracket && nextComma >= 0 ? nextComma : nextCloseBracket;
+
+                    var thisNum = line.Substring(i, nextEnding - i);
+
+                    var newPair = new Day18Pair() { Value = int.Parse(thisNum), ParentPair = curPair };
+
+                    if (curPair.LeftPair == null)
+                        curPair.LeftPair = newPair;
+                    else
+                        curPair.RightPair = newPair;
+
+                    i = nextEnding - 1;
+                }
+            }
+
+            return root;
+        }
+
+        public class Day18Pair
+        {
+            public int? Value;
+            public Day18Pair? LeftPair;            
+            public Day18Pair? RightPair;
+            public Day18Pair? ParentPair;
+
+            public override string ToString()
+            {
+                if (Value.HasValue) return Value.ToString();
+                return "[" + LeftPair.ToString() + "," + RightPair.ToString() + "]";
+            }
+
+            public List<Day18Pair> PreOrderTraversal()
+            {
+                List<Day18Pair> children = new List<Day18Pair>();
+
+                if (this.Value.HasValue)
+                {
+                    children.Add(this);
+                }
+                else
+                {
+                    children.AddRange(LeftPair.PreOrderTraversal());
+                    children.AddRange(RightPair.PreOrderTraversal());
+                }
+
+                return children;
+            }
+
+            public Day18Pair Root()
+            {
+                if (this.ParentPair == null) return this;
+                return this.ParentPair.Root();
+            }
+
+            public void Reduce()
+            {
+                while (true)
+                {
+                    bool explode = DoNextReduceExplodeAction(0);
+                    if (!explode)
+                    {
+                        bool split = DoNextReduceSplitAction(0);
+                        if (!split)
+                        {
+                            break;
+                        }
+                    }
+                }
+            }
+
+            public bool DoNextReduceExplodeAction(int reduceLevel)
+            {
+                if (reduceLevel == 4 && !this.Value.HasValue)
+                {
+                    //explode
+                    var allLeafs = this.Root().PreOrderTraversal();
+                    if (allLeafs.IndexOf(this.LeftPair) > 0)
+                    {
+                        allLeafs[allLeafs.IndexOf(this.LeftPair) - 1].Value += this.LeftPair.Value;
+                    }
+
+                    if (allLeafs.IndexOf(this.RightPair) < allLeafs.Count - 1)
+                    {
+                        allLeafs[allLeafs.IndexOf(this.RightPair) + 1].Value += this.RightPair.Value;
+                    }
+
+                    this.LeftPair = null;
+                    this.RightPair = null;
+                    this.Value = 0;
+
+                    return true;
+                }               
+                else if (LeftPair != null && LeftPair.DoNextReduceExplodeAction(reduceLevel + 1))
+                {
+                    //bubble up
+                    return true;
+                }
+                else if (RightPair != null && RightPair.DoNextReduceExplodeAction(reduceLevel + 1))
+                {
+                    //bubble up
+                    return true;
+                }
+
+                return false;
+            }
+
+            public bool DoNextReduceSplitAction(int reduceLevel)
+            {
+                if (Value > 9)
+                {
+                    //split
+                    LeftPair = new Day18Pair() { Value = Value / 2, ParentPair = this };
+                    RightPair = new Day18Pair() { Value = Value / 2 + (Value % 2 == 0 ? 0 : 1), ParentPair = this };
+                    Value = null;
+                    return true;
+                }
+                else if (LeftPair != null && LeftPair.DoNextReduceSplitAction(reduceLevel + 1))
+                {
+                    //bubble up
+                    return true;
+                }
+                else if (RightPair != null && RightPair.DoNextReduceSplitAction(reduceLevel + 1))
+                {
+                    //bubble up
+                    return true;
+                }
+
+                return false;
+            }
+
+            public int Magnitude()
+            {
+                if (Value.HasValue) return Value.Value;
+
+                return 3 * LeftPair.Magnitude() + 2 * RightPair.Magnitude();
+            }
+        }
+
+        #endregion
 
         #region Day17
 
