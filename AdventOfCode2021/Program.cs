@@ -9,8 +9,194 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day18PartTwo();
+            Day19PartOne();
         }
+
+        #region Day19
+
+        public static void Day19PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day19.txt");
+
+            //parse
+            List<List<(int, int, int)>> scanners = new List<List<(int, int, int)>>();
+
+            foreach (string line in lines)
+            {
+                if (line.StartsWith("---"))
+                {
+                    scanners.Add(new List<(int, int, int)>());
+                }
+                else if (line.Trim() != "")
+                {
+                    string[] split = line.Split(',');
+                    scanners[scanners.Count - 1].Add((int.Parse(split[0]), int.Parse(split[1]), int.Parse(split[2])));
+                }
+            }
+                        
+            //set up lists
+            List<List<(int, int, int)>> remaining = new List<List<(int, int, int)>>(scanners);            
+            
+            List<(int, int, int)> scannerPositions = new List<(int, int, int)>();
+            List<(int, int, int)> beacons = new List<(int, int, int)>();
+            HashSet<(int, int, int, int, int, int)> combosTried = new HashSet<(int, int, int, int, int, int)>();
+                        
+            remaining.Remove(scanners[0]);
+            scannerPositions.Add((0, 0, 0));
+            beacons.AddRange(scanners[0]);
+
+            //set up rotation matrices
+            List<(int, int, int)> rotationMatrices = new List<(int, int, int)>();
+
+            //rotate 0
+            rotationMatrices.Add((1, 1, 1));
+
+            //rotate 1
+            rotationMatrices.Add((-1, 1, 1));
+            rotationMatrices.Add((1, -1, 1));
+            rotationMatrices.Add((1, 1, -1));
+
+            //rotate 2
+            rotationMatrices.Add((1, -1, -1));
+            rotationMatrices.Add((-1, 1, -1));
+            rotationMatrices.Add((-1, -1, 1));
+
+            //rotate 3
+            rotationMatrices.Add((-1, -1, -1));
+
+            //so many different things to try
+            while (remaining.Count > 0)
+            {
+                int startCount = remaining.Count;
+
+                for (var i = 0; i < remaining.Count; i++)
+                {
+                    //make a copy                
+                    var found = false;
+                    var targetList = remaining[i];
+
+                    foreach (var rotation in rotationMatrices)
+                    {
+                        for (var swap = 0; swap < 6; swap++)
+                        {
+                            targetList = Rotate(remaining[i], rotation, swap);
+
+                            foreach (var beacon in beacons)
+                            {
+                                foreach (var target in targetList)
+                                {
+                                    if (!combosTried.Contains((beacon.Item1, target.Item1, beacon.Item2, target.Item2, beacon.Item3, target.Item3)))
+                                    {
+                                        var diff = (beacon.Item1 - target.Item1, beacon.Item2 - target.Item2, beacon.Item3 - target.Item3);
+                                        var testList = Translate(targetList, diff);
+                                        var count = testList.Intersect(beacons).Count();
+                                        if (count >= 12)
+                                        {
+                                            //match                                        
+                                            scannerPositions.Add(diff);
+                                            beacons.AddRange(testList);
+                                            beacons = beacons.Distinct().ToList();
+                                            remaining.Remove(remaining[i]);
+                                            Console.WriteLine("Found one at " + diff.ToString() + " - " + remaining.Count.ToString() + " remaining");
+                                            i--;
+                                            found = true;
+                                            break;
+
+                                        }
+                                        combosTried.Add((beacon.Item1, target.Item1, beacon.Item2, target.Item2, beacon.Item3, target.Item3));
+                                    }
+                                }
+                                if (found) break;
+                            }
+                            if (found) break;
+                        }
+                        if (found) break;
+                    }
+                }
+
+                if (startCount == remaining.Count) throw new Exception("Problem");
+            }
+
+            Console.WriteLine(beacons.Count + " beacons found");
+
+            foreach (var one in scannerPositions)
+                Console.WriteLine(one);
+            //part 2
+            var max = 0;
+            for (var i = 0; i < scannerPositions.Count; i++)
+            {
+                for (var j = i + 1; j < scannerPositions.Count; j++)
+                {
+                    var distance =
+                        Math.Abs(scannerPositions[i].Item1 - scannerPositions[j].Item1) +
+                        Math.Abs(scannerPositions[i].Item2 - scannerPositions[j].Item2) +
+                        Math.Abs(scannerPositions[i].Item3 - scannerPositions[j].Item3);
+
+                    if (distance > max)
+                        max = distance;
+                }
+            }
+
+            Console.WriteLine(max + " largest manhattan distance");
+        }
+
+        public static List<(int, int, int)> Translate(List<(int, int, int)> source, (int, int, int) translation)
+        {
+            List<(int, int, int)> result = new List<(int, int, int)>();
+            foreach (var one in source)
+                result.Add((one.Item1 + translation.Item1, one.Item2 + translation.Item2, one.Item3 + translation.Item3));
+            return result;
+        }
+
+        public static List<(int, int, int)> Rotate(List<(int, int, int)> source, (int, int, int) rotation, int swap)
+        {
+            List<(int, int, int)> result = new List<(int, int, int)>();
+            foreach (var one in source)
+            {
+                var x = (one.Item1 * rotation.Item1, one.Item2 * rotation.Item2, one.Item3 * rotation.Item3);
+                if (swap == 1)
+                {
+                    //swap 1 and 2
+                    var y = x.Item1;
+                    x.Item1 = x.Item2;
+                    x.Item2 = y;
+                }
+                else if (swap == 2)
+                {
+                    //swap 1 and 3
+                    var y = x.Item1;
+                    x.Item1 = x.Item3;
+                    x.Item3 = y;
+                }
+                else if (swap == 3)
+                {
+                    //swap 2 and 3
+                    var y = x.Item2;
+                    x.Item2 = x.Item3;
+                    x.Item3 = y;
+                }
+                else if (swap == 4)
+                {
+                    //swap 1 and 2 and 3 left
+                    var y = x.Item1;
+                    x.Item1 = x.Item2;
+                    x.Item2 = x.Item3;
+                    x.Item3 = y;
+                }
+                else if (swap == 5)
+                {
+                    //swap 1 and 2 and 3 right
+                    var y = x.Item3;
+                    x.Item3 = x.Item2;
+                    x.Item2 = x.Item1;
+                    x.Item1 = y;
+                }
+                result.Add(x);
+            }
+            return result;
+        }
+
+        #endregion
 
         #region Day18
 
