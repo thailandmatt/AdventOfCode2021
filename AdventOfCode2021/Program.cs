@@ -9,8 +9,72 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day19PartOne();
+            Day20();
         }
+
+        #region Day20
+
+        public static void Day20()
+        {
+            var lines = System.IO.File.ReadAllLines("Day20.txt").ToList();
+
+            string algorithm = lines[0];
+            lines.RemoveAt(0);
+            lines.RemoveAt(0);
+            
+            for (var pass = 0; pass < 50; pass++)
+            {
+                //expand it out
+                var expand = 3;
+                var defaultChar = pass == 0 ? '.' : lines[0][0];
+
+                for (var i = 0; i < expand; i++)
+                {
+                    lines.Insert(0, new string(defaultChar, lines[0].Length));
+                    lines.Add(new string(defaultChar, lines[0].Length));
+                }
+
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    lines[i] = new string(defaultChar, expand) + lines[i] + new string(defaultChar, expand);
+                }
+
+                var copy = new List<string>(lines.ToArray());
+
+                //now start at 1,1 and do the algorithm
+                for (var row = 1; row < lines.Count - 1; row++)
+                {                    
+                    for (var col = 1; col < lines[row].Length - 1; col++)
+                    {                        
+                        var s = lines[row - 1][col - 1].ToString() + lines[row - 1][col].ToString() + lines[row - 1][col + 1].ToString() +
+                            lines[row][col - 1].ToString() + lines[row][col].ToString() + lines[row][col + 1].ToString() +
+                            lines[row + 1][col - 1].ToString() + lines[row + 1][col].ToString() + lines[row + 1][col + 1].ToString();
+
+                        s = s.Replace(".", "0").Replace("#", "1");
+                        var index = Convert.ToInt32(s, 2);
+
+                        copy[row] = copy[row].Substring(0, col) + algorithm[index] + copy[row].Substring(col + 1);                        
+                    }
+                }
+
+                lines = copy;
+
+                //trim the edges
+                lines.RemoveAt(0);
+                lines.RemoveAt(lines.Count - 1);
+                for (var i = 0; i < lines.Count; i++)
+                {
+                    lines[i] = lines[i].Substring(1, lines[i].Length - 2);
+                }
+
+                string x = String.Join('\n', lines);
+            }
+
+            int total = lines.Sum(one => one.Count(two => two == '#'));
+            Console.WriteLine("total = " + total);
+        }
+
+        #endregion
 
         #region Day19
 
