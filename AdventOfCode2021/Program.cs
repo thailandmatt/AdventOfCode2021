@@ -9,8 +9,118 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day20();
+            Day21PartTwo();
         }
+
+        #region Day21
+
+        public static void Day21PartTwo()
+        {
+            Dictionary<(int, int, int, int), (long, long)> cache = new Dictionary<(int, int, int, int), (long, long)>();
+            var result = Day21PartTwoPlayTurn(6, 0, 7, 0, cache);
+
+            Console.WriteLine("Result: " + result);
+        }
+
+
+        //return (0, 1) if p2 wins, (1, 0) if p1 wins
+        public static (long, long) Day21PartTwoPlayTurn(int p1Position, int p1Score, int p2Postion, int p2Score, Dictionary<(int, int, int, int), (long, long)> cache) 
+        {
+            //base case - someone wins
+            if (p1Score >= 21 || p2Score >= 21)
+            {
+                return (p1Score >= 21 ? 1 : 0, p2Score >= 21 ? 1 : 0);
+            }
+
+            //check each possible die roll in the triple loop
+            if (cache.ContainsKey((p1Position, p1Score, p2Postion, p2Score)))
+            {
+                return cache[(p1Position, p1Score, p2Postion, p2Score)];
+            }
+            
+            (long, long) result = (0, 0);
+            for (var i = 1; i <= 3; i++)
+            {
+                for (var j = 1; j <= 3; j++)
+                {
+                    for (var k = 1; k <= 3; k++)
+                    {
+                        var roll = i + j + k;
+                        var newPosition = (p1Position + roll) % 10;
+                        if (newPosition == 0) newPosition = 10;
+
+                        var newScore = p1Score + newPosition;
+
+                        //switch players on the next iteration down
+                        var NextTurnResult = Day21PartTwoPlayTurn(p2Postion, p2Score, newPosition, newScore, cache);
+                        result.Item1 += NextTurnResult.Item2;
+                        result.Item2 += NextTurnResult.Item1;
+                    }
+                }
+            }
+
+            cache[(p1Position, p1Score, p2Postion, p2Score)] = result;
+
+            return cache[(p1Position, p1Score, p2Postion, p2Score)];
+        }
+        
+        public static void Day21PartOne()
+        {
+            //my input
+            var p1Position = 6;
+            var p2Position = 7;
+
+            var p1Score = 0;
+            var p2Score = 0;
+
+            bool p1Turn = true;
+
+            var dieValue = 0;
+            var dieRolls = 0;
+            var dieSum = 0;
+
+            while (true)
+            {
+                dieRolls++;
+                dieValue++;                
+                if (dieValue == 101) dieValue = 1;
+                dieSum += dieValue;
+
+                if (dieRolls % 3 == 0 && p1Turn)
+                {                    
+                    p1Position += dieSum;                    
+                    p1Position = p1Position % 10;
+                    if (p1Position == 0) p1Position = 10;
+                    p1Score += p1Position;
+
+                    Console.WriteLine("P1 rolls " + dieSum + ", position " + p1Position + ", score " + p1Score);
+
+                    if (p1Score >= 1000) break;
+                    p1Turn = !p1Turn;
+                    dieSum = 0;
+                }
+                else if (dieRolls % 3 == 0 && !p1Turn)
+                {                    
+                    p2Position += dieSum;
+                    p2Position = p2Position % 10;
+                    if (p2Position == 0) p2Position = 10;
+                    p2Score += p2Position;
+
+                    Console.WriteLine("P2 rolls " + dieSum + ", position " + p2Position + ", score " + p2Score);
+
+                    if (p2Score >= 1000) break;
+                    p1Turn = !p1Turn;
+                    dieSum = 0;
+                }
+
+                if (p1Score >= 1000 || p2Score >= 1000) break;
+            }
+
+            Console.WriteLine($"P1 Score:{p1Score}, P2 Score:{p2Score}, dieRolls:{dieRolls}, part1:{(p1Score < p2Score ? p1Score : p2Score) * dieRolls}");
+        }
+
+        #endregion
+
 
         #region Day20
 
