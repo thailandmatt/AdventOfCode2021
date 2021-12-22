@@ -9,8 +9,114 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day21PartTwo();
+            Day22PartOne();
         }
+
+        #region Day22
+
+        public static void Day22PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day22.txt");
+
+            List<(int, int, int, int, int, int, string)> lineList = new List<(int, int, int, int, int, int, string)>();
+
+            foreach (string line in lines)
+            {
+                string[] split = line.Split(new char[] { ' ', '.', '=', 'x', 'y', 'z', ',' }, StringSplitOptions.RemoveEmptyEntries);
+
+                lineList.Add((int.Parse(split[1]), int.Parse(split[2]), int.Parse(split[3]), int.Parse(split[4]), int.Parse(split[5]), int.Parse(split[6]), split[0]));
+            }
+
+            //I'm sure that it will be too big to represent in total
+            //so we're going to do it in blocks
+            //and split as we need to
+            List<(int, int, int, int, int, int, string)> finalList = new List<(int, int, int, int, int, int, string)>();
+
+            for (var j = 0; j < lineList.Count; j++)
+            {
+                var one = lineList[j];
+
+                List<(int, int, int, int, int, int, string)> newList = new List<(int, int, int, int, int, int, string)>();
+                //find all intersecting ones and then split them
+                for (int i = 0; i < finalList.Count; i++)
+                {
+                    var two = finalList[i];
+
+                    if ((one.Item2 >= two.Item1) &&
+                           (one.Item1 <= two.Item2) &&
+                           (one.Item4 >= two.Item3) &&
+                           (one.Item3 <= two.Item4) &&
+                           (one.Item6 >= two.Item5) &&
+                           (one.Item5 <= two.Item6))
+                    {
+
+                        //split into up to 6 cubes
+                        if (one.Item1 >= two.Item1)
+                        {
+                            newList.Add((two.Item1, one.Item1 - 1, two.Item3, two.Item4, two.Item5, two.Item6, two.Item7));
+                            two.Item1 = one.Item1;
+                        }
+
+                        if (one.Item2 <= two.Item2)
+                        {
+                            newList.Add((one.Item2 + 1, two.Item2, two.Item3, two.Item4, two.Item5, two.Item6, two.Item7));
+                            two.Item2 = one.Item2;
+                        }
+
+                        if (one.Item3 >= two.Item3)
+                        {
+                            newList.Add((two.Item1, two.Item2, two.Item3, one.Item3 - 1, two.Item5, two.Item6, two.Item7));
+                            two.Item3 = one.Item3;
+                        }
+
+                        if (one.Item4 <= two.Item4)
+                        {                         
+                            newList.Add((two.Item1, two.Item2, one.Item4 + 1, two.Item4, two.Item5, two.Item6, two.Item7));
+                            two.Item4 = one.Item4;
+                        }
+
+                        if (one.Item5 >= two.Item5)
+                        {
+                            newList.Add((two.Item1, two.Item2, two.Item3, two.Item4, two.Item5, one.Item5 - 1, two.Item7));
+                            two.Item5 = one.Item5;
+                        }
+
+                        if (one.Item6 <= two.Item6)
+                        {
+                            newList.Add((two.Item1, two.Item2, two.Item3, two.Item4, one.Item6 + 1, two.Item6, two.Item7));
+                            two.Item6 = one.Item6;
+                        }
+                    }
+                    else
+                    {
+                        //no intersect, so add to the new list
+                        newList.Add(two);
+                    }
+                }
+
+                //add the one we just looked at and have been modifying
+                newList.Add(one);
+                finalList = newList;
+                long total = getTotal(finalList);
+                Console.WriteLine("Step " + (j + 1) + " - total " + total);
+            }
+
+
+            Console.WriteLine("Total on:" + getTotal(finalList));
+
+        }
+
+        public static long getTotal(List<(int, int, int, int, int, int, string)> finalList)
+        {
+            long total = 0;
+            foreach (var one in finalList)
+            {
+                total += (one.Item7 == "on" ? ((long)one.Item2 - (long)one.Item1 + 1) * ((long)one.Item4 - (long)one.Item3 + 1) * ((long)one.Item6 - (long)one.Item5 + 1) : 0);
+            }
+            return total;
+        }
+
+        #endregion
 
         #region Day21
 
@@ -24,7 +130,7 @@ namespace AdventOfCode2021
 
 
         //return (0, 1) if p2 wins, (1, 0) if p1 wins
-        public static (long, long) Day21PartTwoPlayTurn(int p1Position, int p1Score, int p2Postion, int p2Score, Dictionary<(int, int, int, int), (long, long)> cache) 
+        public static (long, long) Day21PartTwoPlayTurn(int p1Position, int p1Score, int p2Postion, int p2Score, Dictionary<(int, int, int, int),(long, long)> cache) 
         {
             //base case - someone wins
             if (p1Score >= 21 || p2Score >= 21)
@@ -120,7 +226,6 @@ namespace AdventOfCode2021
         }
 
         #endregion
-
 
         #region Day20
 
