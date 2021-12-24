@@ -9,8 +9,120 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day22PartOne();
+            Day24PartOne();
         }
+
+        #region Day24
+
+        public static void Day24PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day24.txt");
+
+            //once I read a hint that the * 26 and the % 26 were using the big integer as a stack
+            //then I was able to decompile the program into this
+
+            //z.push(A + 6)
+            //z.push(B + 12)
+            //z.push(C + 5)
+            //z.push(D + 10)
+            //if (E != z.pop()-16) push something    
+            //z.push(F)
+            //z.push(G + 4)
+            //"if (H != z.pop()-4) push something  
+            //z.push(I + 14)
+            //if (J != z.pop() - 7)
+            //if (K != z.pop() - 8)
+            //if (L != z.pop() - 4)
+            //if (M != z.pop() - 15)
+            //if (N != z.pop() - 8)
+
+            //which implies these rules:
+            //E = D - 6
+            //G = H
+            //J = I + 7
+            //K = F - 8
+            //L = C + 1
+            //M = B - 3
+            //N = A - 2
+
+            //where ABCDEFGHIJKLMN is the input number
+            //so we want the max for part 1 - set the most significant digits (is rule implied)
+            //A = 9, B = 9, C = 8, D = 9 (E = 3) F = 9, G = 9, (H = 9) I = 2, (J = 9) (K = 1) (L = 9) (M = 6) (N = 7)            
+            //99893999291967
+
+            long x = 99893999291967;
+            var result = ExecuteALUProgram(lines, x.ToString().ToArray().Select(one => int.Parse(one.ToString())).ToArray());
+            Console.WriteLine("Checking " + x + " and the answer is " + result['z']);
+
+            //part 2 is minimize
+            //so....
+            //A = 3 B = 4 C = 1 D = 7 (E = 1) F = 9 G = 1 (H = 1) I = 1 (J = 8) (K = 1) (L = 2) (M = 1) (N = 1)
+            //34171911181211
+            x = 34171911181211;
+            result = ExecuteALUProgram(lines, x.ToString().ToArray().Select(one => int.Parse(one.ToString())).ToArray());
+            Console.WriteLine("Checking " + x + " and the answer is " + result['z']);
+        }
+
+        public static Dictionary<char, long> ExecuteALUProgram(string[] program, int[] inputs)
+        {
+            Dictionary<char, long> vars = new Dictionary<char, long>();
+            vars.Add('w', 0);
+            vars.Add('x', 0);
+            vars.Add('y', 0);
+            vars.Add('z', 0);
+
+            var curInput = 0;
+
+            foreach (var s in program)
+            {
+                string[] split = s.Split(' ');
+                if (split[0] == "inp")
+                {
+                    vars[split[1][0]] = inputs[curInput];
+                    curInput++;
+                }
+                else
+                {
+                    var a = vars[split[1][0]];
+                    var b = 0L;
+                    if (vars.ContainsKey(split[2][0]))
+                        b = vars[split[2][0]];
+                    else
+                        b = long.Parse(split[2]);
+
+                    if (split[0] == "add")
+                    {
+                        vars[split[1][0]] = a + b;
+                    }
+                    else if (split[0] == "mul")
+                    {
+                        vars[split[1][0]] = a * b;
+                    }
+                    else if (split[0] == "div")
+                    {
+                        vars[split[1][0]] = a / b;
+                    }
+                    else if (split[0] == "mod")
+                    {
+                        vars[split[1][0]] = a % b;
+                    }
+                    else if (split[0] == "eql")
+                    {
+                        vars[split[1][0]] = a == b ? 1 : 0;
+                    }
+                }
+            }
+
+            return vars;
+        }
+
+        #endregion
+
+        #region Day23
+
+        //Day 23 I did by hand
+
+        #endregion
 
         #region Day22
 
