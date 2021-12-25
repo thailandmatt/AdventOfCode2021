@@ -9,7 +9,112 @@ namespace AdventOfCode2021
         
         public static void Main(string[] args)
         {
-            Day24PartOne();
+            Day25PartOne();
+        }
+
+        public static void Day25PartOne()
+        {
+            string[] lines = System.IO.File.ReadAllLines("Day25.txt");
+            char[,] chars = new char[lines.Length, lines[0].Length];
+
+            for (var row = 0; row < lines.Length; row++)
+            {
+                var line = lines[row];               
+
+                for (var col = 0; col < line.Length; col++)
+                {
+                    chars[row, col] = line[col];
+                }
+            }
+
+            int counter = 0;
+            while (true)
+            {
+                counter++;
+                char[,] newChars = new char[lines.Length, lines[0].Length];
+                bool moved = false;
+
+                for (var row = 0; row < lines.Length; row++)
+                {
+                    for (var col = 0; col < lines[0].Length; col++)
+                    {
+                        if (chars[row, col] == '>')
+                        {
+                            var nextIndex = (col == lines[0].Length - 1 ? 0 : col + 1);
+                            if (chars[row, nextIndex] == '.')
+                            {
+                                //it will move over one
+                                newChars[row, col] = '.';
+                                newChars[row, nextIndex] = '>';
+                                moved = true;
+                            }
+                            else
+                            {
+                                newChars[row, col] = '>';
+                            }
+                        }
+                        else if (chars[row, col] == '.')
+                        {
+                            if (newChars[row, col] == default(char))
+                                newChars[row, col] = '.';
+                        }
+                        else if (chars[row, col] == 'v')
+                        {
+                            newChars[row, col] = 'v';
+                        }
+                    }
+                }
+
+                chars = newChars;
+                newChars = new char[lines.Length, lines[0].Length];
+
+                for (var row = 0; row < lines.Length; row++)
+                {
+                    for (var col = 0; col < lines[0].Length; col++)
+                    {
+                        if (chars[row, col] == '>')
+                        {                            
+                            newChars[row, col] = '>';                            
+                        }
+                        else if (chars[row, col] == '.')
+                        {
+                            if (newChars[row, col] == default(char))
+                                newChars[row, col] = '.';
+                        }
+                        else if (chars[row, col] == 'v')
+                        {
+                            var nextIndex = (row == lines.Length - 1 ? 0 : row + 1);
+                            if (chars[nextIndex, col] == '.')
+                            {
+                                //it will move down
+                                newChars[row, col] = '.';
+                                newChars[nextIndex, col] = 'v';
+                                moved = true;
+                            }
+                            else
+                            {
+                                newChars[row, col] = 'v';
+                            }
+                        }
+                    }
+                }
+
+                if (!moved) break;
+
+                string output = "";
+                for (var row = 0; row < lines.Length; row++)
+                {
+                    for (var col = 0; col < lines[0].Length; col++)
+                    {
+                        output += newChars[row, col];
+                    }
+                    output += "\n";
+                }
+
+                chars = newChars;
+            }
+
+            Console.WriteLine(counter + " moves");
         }
 
         #region Day24
